@@ -1,5 +1,4 @@
 #!/bin/sh
-# Please, move this script into the root directory of repository before running it
 set -euf
 
 cd "$(dirname "$0")"/..
