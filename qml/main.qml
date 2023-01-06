@@ -1,43 +1,62 @@
 import QtQuick
-import QtQuick.Shapes
+import QtQuick.Controls
+import "Base"
+import "Summary"
+import "Welcome"
 
 Window {
     id: window
-    width: 1080
-    height: 1920
+    readonly property real minSize: Math.min(window.width, window.height)
+    readonly property real maxSize: Math.max(window.width, window.height)
+    width: 1284 / 2
+    height: 2778 / 2
     visible: true
     title: qsTr("us")
-    color: "white"
+    color: theme.windowColor
 
-    Rectangle {
-        id: rectangle
-        width: height
-        height: Math.max(parent.width, parent.height)
-        anchors.horizontalCenter: parent.horizontalCenter
-        opacity: 0.0
-        gradient: Gradient {
-            GradientStop {
-                position: 0.2
-                color: "#FEA3AA"
-            }
-            GradientStop {
-                position: 0.4
-                color: "#FFFFFF"
-            }
+    StackView {
+        id: stack
+        anchors.fill: parent
+        initialItem: summaryPage // welcomePage
+    }
+
+    RectangleButton {
+        id: addButton
+        width: window.minSize * 0.1
+        height: width
+        color: "teal"
+        anchors.right: parent.right
+        anchors.rightMargin: window.width * 0.01
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: window.height * 0.01
+        onClicked: stack.push()
+        Rectangle {
+            width: parent.width * 0.5
+            height: parent.height * 0.05
+            anchors.centerIn: parent
+            radius: height / 2
+            color: theme.textColor
         }
-        OpacityAnimator on opacity {
-            duration: 2000
-            from: 0
-            to: 1
-            running: true
-            easing.type: Easing.InOutQuad
+        Rectangle {
+            width: parent.width * 0.05
+            height: parent.height * 0.5
+            anchors.centerIn: parent
+            radius: width / 2
+            color: theme.textColor
         }
     }
-    Text {
-        text: qsTr("US")
-        y: 100
-        anchors.horizontalCenter: parent.horizontalCenter
-        color: "white"
-        font.pointSize: 100
+
+    Component {
+        id: welcomePage
+        WelcomePage {
+            onWelcomingCompleted: stack.replace(welcomePage, summaryPage)
+        }
+    }
+    Component {
+        id: summaryPage
+        SummaryPage {
+            onPush: component => stack.push(component)
+            onPop: stack.pop()
+        }
     }
 }

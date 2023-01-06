@@ -1,8 +1,12 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-
 #include <QLocale>
 #include <QTranslator>
+#include <QFontDatabase>
+#include <QQmlContext>
+#include <QPalette>
+
+#include "theme.h"
 
 bool setupLocalization(QGuiApplication* app, QTranslator* translator) noexcept
 {
@@ -12,10 +16,10 @@ bool setupLocalization(QGuiApplication* app, QTranslator* translator) noexcept
 	{
         if (translator->load(locale))
         {
-            qDebug() << "Loaded" << locale << "locale";
+            qDebug() << "Installing" << locale << "locale";
             return app->installTranslator(translator);
         }
-		if (locale == "en")
+        if (locale == QStringLiteral("en"))
 		{
             qDebug() << "Loaded default en locale";
 			return true;
@@ -25,22 +29,32 @@ bool setupLocalization(QGuiApplication* app, QTranslator* translator) noexcept
     return false;
 }
 
+bool loadRobotoFont() noexcept
+{
+    // For examples of this font open dafont.com/roboto.font
+    int loadedNum = 0;
+    loadedNum += QFontDatabase::addApplicationFont(QStringLiteral(":/assets/fonts/Roboto-Thin.ttf")) >= 0;
+    loadedNum += QFontDatabase::addApplicationFont(QStringLiteral(":/assets/fonts/Roboto-Light.ttf")) >= 0;
+    loadedNum += QFontDatabase::addApplicationFont(QStringLiteral(":/assets/fonts/Roboto-Regular.ttf")) >= 0;
+    loadedNum += QFontDatabase::addApplicationFont(QStringLiteral(":/assets/fonts/Roboto-Medium.ttf")) >= 0;
+    loadedNum += QFontDatabase::addApplicationFont(QStringLiteral(":/assets/fonts/Roboto-Bold.ttf")) >= 0;
+    loadedNum += QFontDatabase::addApplicationFont(QStringLiteral(":/assets/fonts/Roboto-Black.ttf")) >= 0;
+    return loadedNum == 6;
+}
+
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     QTranslator translator;
     if (!setupLocalization(&app, &translator))
-        qDebug() << "No translation found for current language, falling back to english.";
+        qDebug() << "Something went wrong when trying to localize the application. Maybe no supported language was found or the translation file wasn't complete.";
+    if (!loadRobotoFont())
+        qFatal("Couldn't load the Roboto font family.");
+    Theme theme(isSystemDarkTheme(app.palette()));
 
     QQmlApplicationEngine engine;
-    const QUrl url(QStringLiteral("qrc:/qml/main.qml"));
-    QObject::connect(&engine, &QQmlApplicationEngine::objectCreated, &app,
-    [url](QObject *obj, const QUrl &objUrl)
-    {
-        if (!obj && url == objUrl)
-            QCoreApplication::exit(-1);
-    }, Qt::QueuedConnection);
-    engine.load(url);
+    engine.rootContext()->setContextProperty(QStringLiteral("theme"), &theme);
+    engine.load(QStringLiteral(":/qml/main.qml"));
 
     return app.exec();
 }
