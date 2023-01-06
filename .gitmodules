@@ -1,0 +1,4 @@
+[submodule "3rd-party/sqlite"]
+	path = 3rd-party/sqlite
+	url = git@github.com:sqlite/sqlite
+	branch = master
